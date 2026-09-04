@@ -1,2 +1,14 @@
+# Dependencies — Pace ships with none; this is only ever test-harness install
 node_modules/
+package-lock.json
+
+# Editor and OS noise
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*

@@ -2,7 +2,8 @@
  * Pace — core recovery-pacing logic.
  *
  * This file is loaded verbatim by both index.html (the app the judges see)
- * and test_logic.js (the assertions that prove the Stage Gate works). There
+ * and test/pace-logic.test.js (the assertions that prove the Stage Gate
+ * works). There
  * is no second, "test-only" copy of these rules: the logic that is tested is
  * the logic that ships.
  *

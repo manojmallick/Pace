@@ -125,8 +125,8 @@ symptom-free check-in has been logged since their last advance. A
 single symptomatic entry resets that requirement to zero, even if the
 user immediately tries to advance afterward.
 
-**Verified, not asserted.** `node test_logic.js` -- 27 assertions
-against `pace_logic.js`, the same file the app loads. Abridged:
+**Verified, not asserted.** `npm test` -- 27 assertions against
+`src/js/pace-logic.js`, the same file the app loads. Abridged:
 
 ```
 1   Initial state is stage 0 with no symptom-free days           PASS
@@ -164,9 +164,11 @@ writing them found a real bypass (see Challenge 3).
 
 ## SECTION 4 — VERIFIED CODE (already built and tested, not a plan to build it)
 
-The full working application is a single, dependency-free HTML file
-(`pace_app.html`) -- no build step, no package install, no server. Core
-logic, extracted and verified:
+The working application is dependency-free static HTML, CSS and
+JavaScript -- no build step, no package install, no server. The
+safety-critical logic lives in `src/js/pace-logic.js`, which
+`index.html` loads directly and the test suite exercises, so the code
+under test is the code that ships. Core logic, extracted and verified:
 
 ```javascript
 const STAGES = [
@@ -347,7 +349,8 @@ in your browser's local storage -- nothing is transmitted anywhere.
 ## Verified logic
 
 The core stage-progression and symptom-gating logic was tested with
-real assertions before submission -- see `test_logic.js`. Notably: the
+real assertions before submission -- see `test/pace-logic.test.js`.
+Notably: the
 app correctly blocks stage advancement after a symptomatic entry, even
 if the user immediately tries again.
 

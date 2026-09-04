@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Tests (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['18', '20', '22']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # No install step: Pace has zero runtime and zero build dependencies.
+      # If this ever needs one, that is a regression worth noticing here.
+      - name: Assert the project has no dependencies
+        run: |
+          node -e "
+            const p = require('./package.json');
+            const n = Object.keys(p.dependencies || {}).length
+                    + Object.keys(p.devDependencies || {}).length;
+            if (n > 0) { console.error('Pace must stay dependency-free; found ' + n); process.exit(1); }
+            console.log('Dependency-free: confirmed');
+          "
+
+      - name: Logic tests
+        run: npm test
+
+      # jsdom is a test harness only, installed with --no-save so it never
+      # becomes a project dependency.
+      - name: Install UI test harness
+        run: npm install --no-save jsdom
+
+      - name: User interface tests
+        run: npm run test:ui

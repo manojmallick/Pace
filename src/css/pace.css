@@ -1,0 +1,199 @@
+/*
+ * Pace - stylesheet.
+ *
+ * Palette contrast ratios against their own backgrounds were checked against
+ * WCAG 2.1 AA (4.5:1 for body text, 3:1 for large text and UI boundaries).
+ * The recovering-concussion audience makes light sensitivity a design
+ * constraint, not a preference: the page ground is a low-glare off-white
+ * rather than pure #FFF, and no element uses a saturated full-bleed fill.
+ */
+
+:root {
+  --ink: #1A2233;
+  --ink-soft: #55647F;
+  --line: #D5DCE7;
+  --brand: #17497F;
+  --brand-deep: #0F3560;
+  --ground: #F4F7FB;
+  --card: #FFFFFF;
+  --warn-bg: #FFF6E8;
+  --warn-line: #D9871A;
+  --warn-ink: #6E4106;
+  --ok-bg: #E8F6EE;
+  --ok-ink: #16603A;
+  --stop-bg: #FDECEC;
+  --stop-line: #C0392B;
+  --stop-ink: #8C2A1E;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  max-width: 660px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+  background: var(--ground);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+h1 { font-size: 1.6rem; color: var(--brand); margin: 0 0 4px; }
+.subtitle { color: var(--ink-soft); font-size: 0.95rem; margin-bottom: 20px; }
+
+a { color: var(--brand); }
+
+/* Safety banner: top of page, no dismiss control, announced to screen
+   readers as a note rather than decoration. */
+.safety-banner {
+  background: var(--warn-bg);
+  border: 2px solid var(--warn-line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 0.92rem;
+  color: var(--warn-ink);
+  margin-bottom: 24px;
+}
+.safety-banner strong { display: block; margin-bottom: 6px; font-size: 0.98rem; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px 18px;
+  margin-bottom: 20px;
+}
+.card h2 { font-size: 1.1rem; margin: 0 0 14px; color: var(--brand); }
+
+.stage-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.stage-badge {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+}
+.stage-done { background: #1C7A47; color: #fff; }
+.stage-current { background: var(--brand); color: #fff; box-shadow: 0 0 0 3px #C7D9EE; }
+.stage-upcoming { background: #E6EBF2; color: #5A6A82; border: 1px solid var(--line); }
+.stage-label { font-size: 0.95rem; }
+.stage-current-label { font-weight: 700; }
+.stage-upcoming-label { color: var(--ink-soft); }
+.stage-tag {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--brand); margin-left: 2px;
+}
+
+.status {
+  padding: 12px 14px; border-radius: 10px; font-size: 0.92rem;
+  margin: 16px 0 14px; border: 1px solid transparent;
+}
+.status-ok { background: var(--ok-bg); color: var(--ok-ink); border-color: #A8D9BE; }
+.status-wait { background: var(--warn-bg); color: var(--warn-ink); border-color: #E8C48A; }
+.status-blocked { background: var(--stop-bg); color: var(--stop-ink); border-color: var(--stop-line); }
+.status strong { display: block; margin-bottom: 4px; }
+
+fieldset { border: none; margin: 0 0 8px; padding: 0; }
+legend { font-size: 0.88rem; font-weight: 700; color: #2C3A54; padding: 0 0 8px; }
+
+label { display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px; color: #2C3A54; }
+
+select {
+  width: 100%; padding: 11px 10px; border-radius: 8px;
+  border: 1px solid var(--line); margin-bottom: 18px;
+  font-size: 1rem; font-family: inherit; background: #fff; color: var(--ink);
+}
+
+.symptom { margin-bottom: 16px; }
+.symptom-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 4px;
+}
+.symptom-head label { margin-bottom: 0; font-weight: 600; }
+.symptom-value {
+  font-weight: 700; color: var(--brand); font-variant-numeric: tabular-nums;
+  min-width: 2.5rem; text-align: right;
+}
+
+/* 44px touch target on the slider thumb -- checked on a real phone, the
+   browser default was too small to drag accurately one-handed. */
+input[type=range] {
+  width: 100%; margin: 0; background: transparent;
+  -webkit-appearance: none; appearance: none; height: 44px;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 3px; background: #DFE5EE;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--brand); border: 3px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3); margin-top: -11px;
+}
+input[type=range]::-moz-range-track { height: 6px; border-radius: 3px; background: #DFE5EE; }
+input[type=range]::-moz-range-thumb {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--brand); border: 3px solid #fff;
+}
+input[type=range]:focus-visible { outline: 3px solid #1F6FD0; outline-offset: 2px; }
+
+.scale-hint {
+  display: flex; justify-content: space-between;
+  font-size: 0.74rem; color: var(--ink-soft); margin-top: -4px;
+}
+
+button {
+  background: var(--brand); color: #fff; border: none;
+  padding: 14px 18px; border-radius: 10px;
+  font-size: 1rem; font-weight: 700; font-family: inherit;
+  cursor: pointer; width: 100%; min-height: 48px;
+}
+button:hover { background: var(--brand-deep); }
+button:focus-visible { outline: 3px solid #1F6FD0; outline-offset: 2px; }
+button.secondary {
+  background: #fff; color: var(--brand);
+  border: 1.5px solid var(--brand); margin-top: 10px;
+}
+button.secondary:hover { background: #EDF3FA; }
+button[disabled] {
+  background: #E6EBF2; color: #78859B; cursor: not-allowed; border-color: transparent;
+}
+button[disabled]:hover { background: #E6EBF2; }
+
+.note { font-size: 0.82rem; color: var(--ink-soft); margin-top: 12px; }
+
+.log-entry {
+  border-left: 4px solid var(--line);
+  padding: 10px 12px; margin-bottom: 10px; font-size: 0.9rem;
+  background: #FBFCFE; border-radius: 0 6px 6px 0;
+}
+.log-entry.flag { border-left-color: var(--warn-line); background: var(--warn-bg); }
+.log-entry.clear { border-left-color: #1C7A47; }
+.log-activity { font-weight: 600; }
+.log-meta { color: var(--ink-soft); font-size: 0.82rem; margin-top: 2px; }
+.log-flag-text { color: var(--warn-ink); font-weight: 600; }
+
+.empty-state { color: var(--ink-soft); font-size: 0.9rem; }
+
+.window-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.window-row select { width: auto; margin-bottom: 0; flex: 0 0 auto; }
+
+footer {
+  font-size: 0.82rem; color: var(--ink-soft);
+  margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--line);
+}
+footer p { margin: 0 0 8px; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+@media print {
+  body { background: #fff; max-width: none; padding: 0; }
+  .no-print { display: none !important; }
+  .card { border: none; padding: 0; page-break-inside: avoid; }
+  .safety-banner { border-width: 1px; }
+}

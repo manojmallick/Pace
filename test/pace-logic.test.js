@@ -1,14 +1,15 @@
 /*
  * Pace — assertions for the Stage Gate.
  *
- * Run:  node test_logic.js
+ * Run:  npm test        (or: node test/pace-logic.test.js)
  *
- * These exercise pace_logic.js, the same file index.html loads. Tests 1-5
+ * These exercise src/js/pace-logic.js, the same file index.html loads.
+ * Tests 1-5
  * are the sequence demonstrated live in the demo video; the rest cover the
  * ways a user could plausibly try to get around the gate by accident.
  */
 
-var Pace = require("./pace_logic.js");
+var Pace = require("../src/js/pace-logic.js");
 
 var passed = 0;
 var failed = 0;

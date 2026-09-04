@@ -1,0 +1,33 @@
+{
+  "name": "pace-concussion-companion",
+  "version": "1.0.0",
+  "description": "A graduated return-to-activity companion for concussion recovery. Tracks the six-stage return-to-sport framework and structurally enforces its symptom-free progression rule.",
+  "keywords": [
+    "concussion",
+    "recovery",
+    "return-to-sport",
+    "health",
+    "accessibility",
+    "offline-first"
+  ],
+  "license": "MIT",
+  "private": false,
+  "type": "commonjs",
+  "main": "src/js/pace-logic.js",
+  "files": [
+    "index.html",
+    "src/",
+    "docs/"
+  ],
+  "scripts": {
+    "test": "node test/pace-logic.test.js",
+    "test:ui": "node test/pace-ui.test.js",
+    "test:all": "npm test && npm run test:ui",
+    "start": "node -e \"const{join}=require('path'),{execFileSync}=require('child_process');const f=join(__dirname,'index.html');const o=process.platform==='darwin'?'open':process.platform==='win32'?'start':'xdg-open';execFileSync(o,[f],{stdio:'ignore'});console.log('Opened '+f)\""
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

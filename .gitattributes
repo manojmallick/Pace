@@ -1,0 +1,7 @@
+# Normalise line endings so the project behaves the same on every machine
+* text=auto eol=lf
+
+*.html  diff=html
+*.css   diff=css
+*.js    diff=javascript
+*.md    diff=markdown

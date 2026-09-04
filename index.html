@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pace — Concussion Recovery Companion</title>
+<style>
+  :root {
+    --ink: #1A2233;
+    --ink-soft: #55647F;
+    --line: #D5DCE7;
+    --brand: #17497F;
+    --brand-deep: #0F3560;
+    --ground: #F4F7FB;
+    --card: #FFFFFF;
+    --warn-bg: #FFF6E8;
+    --warn-line: #D9871A;
+    --warn-ink: #6E4106;
+    --ok-bg: #E8F6EE;
+    --ok-ink: #16603A;
+    --stop-bg: #FDECEC;
+    --stop-line: #C0392B;
+    --stop-ink: #8C2A1E;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    max-width: 660px;
+    margin: 0 auto;
+    padding: 20px 16px 48px;
+    background: var(--ground);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  h1 { font-size: 1.6rem; color: var(--brand); margin: 0 0 4px; }
+  .subtitle { color: var(--ink-soft); font-size: 0.95rem; margin-bottom: 20px; }
+
+  a { color: var(--brand); }
+
+  /* Safety banner: top of page, no dismiss control, announced to screen
+     readers as a note rather than decoration. */
+  .safety-banner {
+    background: var(--warn-bg);
+    border: 2px solid var(--warn-line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.92rem;
+    color: var(--warn-ink);
+    margin-bottom: 24px;
+  }
+  .safety-banner strong { display: block; margin-bottom: 6px; font-size: 0.98rem; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px 18px;
+    margin-bottom: 20px;
+  }
+  .card h2 { font-size: 1.1rem; margin: 0 0 14px; color: var(--brand); }
+
+  .stage-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .stage-badge {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+  }
+  .stage-done { background: #1C7A47; color: #fff; }
+  .stage-current { background: var(--brand); color: #fff; box-shadow: 0 0 0 3px #C7D9EE; }
+  .stage-upcoming { background: #E6EBF2; color: #5A6A82; border: 1px solid var(--line); }
+  .stage-label { font-size: 0.95rem; }
+  .stage-current-label { font-weight: 700; }
+  .stage-upcoming-label { color: var(--ink-soft); }
+  .stage-tag {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--brand); margin-left: 2px;
+  }
+
+  .status {
+    padding: 12px 14px; border-radius: 10px; font-size: 0.92rem;
+    margin: 16px 0 14px; border: 1px solid transparent;
+  }
+  .status-ok { background: var(--ok-bg); color: var(--ok-ink); border-color: #A8D9BE; }
+  .status-wait { background: var(--warn-bg); color: var(--warn-ink); border-color: #E8C48A; }
+  .status-blocked { background: var(--stop-bg); color: var(--stop-ink); border-color: var(--stop-line); }
+  .status strong { display: block; margin-bottom: 4px; }
+
+  fieldset { border: none; margin: 0 0 8px; padding: 0; }
+  legend { font-size: 0.88rem; font-weight: 700; color: #2C3A54; padding: 0 0 8px; }
+
+  label { display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 6px; color: #2C3A54; }
+
+  select {
+    width: 100%; padding: 11px 10px; border-radius: 8px;
+    border: 1px solid var(--line); margin-bottom: 18px;
+    font-size: 1rem; font-family: inherit; background: #fff; color: var(--ink);
+  }
+
+  .symptom { margin-bottom: 16px; }
+  .symptom-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .symptom-head label { margin-bottom: 0; font-weight: 600; }
+  .symptom-value {
+    font-weight: 700; color: var(--brand); font-variant-numeric: tabular-nums;
+    min-width: 2.5rem; text-align: right;
+  }
+
+  /* 44px touch target on the slider thumb -- checked on a real phone, the
+     browser default was too small to drag accurately one-handed. */
+  input[type=range] {
+    width: 100%; margin: 0; background: transparent;
+    -webkit-appearance: none; appearance: none; height: 44px;
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    height: 6px; border-radius: 3px; background: #DFE5EE;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--brand); border: 3px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3); margin-top: -11px;
+  }
+  input[type=range]::-moz-range-track { height: 6px; border-radius: 3px; background: #DFE5EE; }
+  input[type=range]::-moz-range-thumb {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--brand); border: 3px solid #fff;
+  }
+  input[type=range]:focus-visible { outline: 3px solid #1F6FD0; outline-offset: 2px; }
+
+  .scale-hint {
+    display: flex; justify-content: space-between;
+    font-size: 0.74rem; color: var(--ink-soft); margin-top: -4px;
+  }
+
+  button {
+    background: var(--brand); color: #fff; border: none;
+    padding: 14px 18px; border-radius: 10px;
+    font-size: 1rem; font-weight: 700; font-family: inherit;
+    cursor: pointer; width: 100%; min-height: 48px;
+  }
+  button:hover { background: var(--brand-deep); }
+  button:focus-visible { outline: 3px solid #1F6FD0; outline-offset: 2px; }
+  button.secondary {
+    background: #fff; color: var(--brand);
+    border: 1.5px solid var(--brand); margin-top: 10px;
+  }
+  button.secondary:hover { background: #EDF3FA; }
+  button[disabled] {
+    background: #E6EBF2; color: #78859B; cursor: not-allowed; border-color: transparent;
+  }
+  button[disabled]:hover { background: #E6EBF2; }
+
+  .note { font-size: 0.82rem; color: var(--ink-soft); margin-top: 12px; }
+
+  .log-entry {
+    border-left: 4px solid var(--line);
+    padding: 10px 12px; margin-bottom: 10px; font-size: 0.9rem;
+    background: #FBFCFE; border-radius: 0 6px 6px 0;
+  }
+  .log-entry.flag { border-left-color: var(--warn-line); background: var(--warn-bg); }
+  .log-entry.clear { border-left-color: #1C7A47; }
+  .log-activity { font-weight: 600; }
+  .log-meta { color: var(--ink-soft); font-size: 0.82rem; margin-top: 2px; }
+  .log-flag-text { color: var(--warn-ink); font-weight: 600; }
+
+  .empty-state { color: var(--ink-soft); font-size: 0.9rem; }
+
+  .window-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .window-row select { width: auto; margin-bottom: 0; flex: 0 0 auto; }
+
+  footer {
+    font-size: 0.82rem; color: var(--ink-soft);
+    margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--line);
+  }
+  footer p { margin: 0 0 8px; }
+
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  @media print {
+    body { background: #fff; max-width: none; padding: 0; }
+    .no-print { display: none !important; }
+    .card { border: none; padding: 0; page-break-inside: avoid; }
+    .safety-banner { border-width: 1px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Pace</h1>
+<p class="subtitle">A companion for the graduated return-to-activity plan your clinician gave you.</p>
+
+<div class="safety-banner" role="note">
+  <strong>Pace does not diagnose concussions, and does not decide when you are ready to progress.</strong>
+  It helps you follow the plan your own clinician has already given you, and log symptoms worth
+  discussing at your next appointment. Always follow your clinician's guidance over anything shown
+  here. If your symptoms are worsening, seek medical attention.
+</div>
+
+<main>
+
+<section class="card" aria-labelledby="stagesHeading">
+  <h2 id="stagesHeading">Your graduated return-to-activity stages</h2>
+
+  <div id="stageList"></div>
+
+  <!-- role=status so a screen reader hears the gate result without the
+       focus theft an alert() causes. -->
+  <div id="gateStatus" class="status" role="status"></div>
+
+  <button id="advanceBtn" type="button">Move to the next stage</button>
+  <p class="note" id="advanceNote"></p>
+
+  <div class="window-row no-print" style="margin-top:16px;">
+    <label for="windowSelect" style="margin-bottom:0;">Symptom-free days my clinician asks for</label>
+    <select id="windowSelect">
+      <option value="1">1 day (framework minimum)</option>
+      <option value="2">2 days</option>
+      <option value="3">3 days</option>
+      <option value="5">5 days</option>
+      <option value="7">7 days</option>
+    </select>
+  </div>
+  <p class="note">
+    The published framework's minimum is 24 hours symptom-free before progressing.
+    If your clinician asked for longer, set it here — Pace will hold you to the longer
+    window. It will not let you set anything shorter than the framework minimum.
+  </p>
+</section>
+
+<section class="card no-print" aria-labelledby="logHeading">
+  <h2 id="logHeading">Log symptoms after an activity attempt</h2>
+
+  <label for="activityInput">What did you just try?</label>
+  <select id="activityInput">
+    <option>Reading / screen time</option>
+    <option>Light walk</option>
+    <option>Schoolwork / desk work</option>
+    <option>Light aerobic exercise</option>
+    <option>Sport-specific drills (no contact)</option>
+    <option>Non-contact training drills</option>
+    <option>Full-contact practice</option>
+    <option>Other</option>
+  </select>
+
+  <fieldset>
+    <legend>How do you feel now, 0 (none) to 10 (severe)?</legend>
+    <div id="symptomInputs"></div>
+  </fieldset>
+
+  <button id="logBtn" type="button">Save this check-in</button>
+  <p class="note" id="logFeedback" role="status"></p>
+</section>
+
+<section class="card" aria-labelledby="historyHeading">
+  <h2 id="historyHeading">Your log — bring this to your next appointment</h2>
+  <div id="logHistory"><p class="empty-state">No entries yet. Log your first check-in above.</p></div>
+  <button id="printBtn" class="secondary no-print" type="button">Print / save this log as PDF</button>
+  <button id="resetBtn" class="secondary no-print" type="button">Erase all my data from this device</button>
+</section>
+
+</main>
+
+<footer>
+  <p>
+    Stage structure and the 24-hour symptom-free rule are taken from the stepwise
+    Return-to-Sport strategy in the 6th International Conference on Concussion in Sport
+    consensus statement (Amsterdam 2022, published in the British Journal of Sports Medicine, 2023).
+  </p>
+  <p>
+    Prototype built for Hack for Humanity Summer 2026. Not a medical device. It does not
+    diagnose, treat, or replace professional care. Everything you enter stays in this
+    browser on this device — nothing is sent anywhere.
+  </p>
+</footer>
+
+<script src="pace_logic.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var P = PaceLogic;
+
+  // Declared before the first loadState() call -- loadState() clears this flag
+  // when storage throws, so a later initialiser here would wipe that signal.
+  var storageWorks = true;
+
+  var state = loadState();
+
+  // -------------------------------------------------------------------------
+  // Persistence. Storage can throw outright (Safari private browsing, blocked
+  // cookies), so every access is guarded -- a browser that refuses to store
+  // should still leave a usable app rather than a blank page.
+  // -------------------------------------------------------------------------
+
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(P.STORAGE_KEY);
+      return P.migrate(raw ? JSON.parse(raw) : null);
+    } catch (e) {
+      storageWorks = false;
+      return P.initialState();
+    }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(P.STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      storageWorks = false;
+    }
+  }
+
+  function todayStr() {
+    var d = new Date();
+    // Local calendar date, not UTC -- toISOString() would roll the date over
+    // early evening for anyone west of Greenwich.
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  function formatDate(iso) {
+    var parts = iso.split("-");
+    var d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString(undefined, {
+      weekday: "short", year: "numeric", month: "short", day: "numeric"
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Symptom sliders, built from the same SYMPTOMS list the logic uses so the
+  // two can never drift apart.
+  // -------------------------------------------------------------------------
+
+  var SEVERITY_WORDS = ["none", "very mild", "mild", "mild", "moderate",
+    "moderate", "marked", "marked", "severe", "severe", "worst imaginable"];
+
+  function buildSymptomInputs() {
+    var container = document.getElementById("symptomInputs");
+    P.SYMPTOMS.forEach(function (sym) {
+      var wrap = document.createElement("div");
+      wrap.className = "symptom";
+
+      var head = document.createElement("div");
+      head.className = "symptom-head";
+
+      var label = document.createElement("label");
+      label.setAttribute("for", "sym-" + sym.key);
+      label.textContent = sym.label;
+
+      var value = document.createElement("span");
+      value.className = "symptom-value";
+      value.id = "symval-" + sym.key;
+      value.setAttribute("aria-hidden", "true");
+      value.textContent = "0";
+
+      head.appendChild(label);
+      head.appendChild(value);
+
+      var input = document.createElement("input");
+      input.type = "range";
+      input.min = "0";
+      input.max = "10";
+      input.step = "1";
+      input.value = "0";
+      input.id = "sym-" + sym.key;
+      input.setAttribute("aria-valuetext", "0, none");
+
+      input.addEventListener("input", function () {
+        value.textContent = input.value;
+        input.setAttribute("aria-valuetext", input.value + ", " + SEVERITY_WORDS[Number(input.value)]);
+      });
+
+      var hint = document.createElement("div");
+      hint.className = "scale-hint";
+      hint.setAttribute("aria-hidden", "true");
+      hint.innerHTML = "<span>0 &mdash; none</span><span>10 &mdash; severe</span>";
+
+      wrap.appendChild(head);
+      wrap.appendChild(input);
+      wrap.appendChild(hint);
+      container.appendChild(wrap);
+    });
+  }
+
+  function readSymptomInputs() {
+    var entry = { date: todayStr(), activity: document.getElementById("activityInput").value };
+    P.SYMPTOMS.forEach(function (sym) {
+      entry[sym.key] = parseInt(document.getElementById("sym-" + sym.key).value, 10);
+    });
+    return entry;
+  }
+
+  function clearSymptomInputs() {
+    P.SYMPTOMS.forEach(function (sym) {
+      var input = document.getElementById("sym-" + sym.key);
+      input.value = "0";
+      input.setAttribute("aria-valuetext", "0, none");
+      document.getElementById("symval-" + sym.key).textContent = "0";
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Rendering
+  // -------------------------------------------------------------------------
+
+  function renderStages() {
+    var el = document.getElementById("stageList");
+    el.innerHTML = "";
+
+    P.STAGES.forEach(function (label, i) {
+      var done = i < state.currentStage;
+      var current = i === state.currentStage;
+
+      var row = document.createElement("div");
+      row.className = "stage-row";
+
+      var badge = document.createElement("div");
+      badge.className = "stage-badge " +
+        (done ? "stage-done" : current ? "stage-current" : "stage-upcoming");
+      badge.textContent = done ? "✓" : String(i + 1);
+      badge.setAttribute("aria-hidden", "true");
+
+      var text = document.createElement("div");
+      text.className = "stage-label " +
+        (current ? "stage-current-label" : done ? "" : "stage-upcoming-label");
+      text.textContent = label;
+
+      // The visual state is carried by colour and a tick mark, so the same
+      // information is repeated in text for screen readers and for anyone
+      // who cannot distinguish the colours.
+      var sr = document.createElement("span");
+      sr.className = "visually-hidden";
+      sr.textContent = done ? " (completed)" : current ? " (current stage)" : " (not yet reached)";
+      text.appendChild(sr);
+
+      if (current) {
+        var tag = document.createElement("span");
+        tag.className = "stage-tag";
+        tag.setAttribute("aria-hidden", "true");
+        tag.textContent = "you are here";
+        text.appendChild(document.createTextNode(" "));
+        text.appendChild(tag);
+      }
+
+      row.appendChild(badge);
+      row.appendChild(text);
+      el.appendChild(row);
+    });
+  }
+
+  function renderGate(justBlocked) {
+    var statusEl = document.getElementById("gateStatus");
+    var btn = document.getElementById("advanceBtn");
+    var note = document.getElementById("advanceNote");
+    var st = P.advanceStatus(state);
+
+    if (st.reason === "final-stage") {
+      statusEl.className = "status status-ok";
+      statusEl.innerHTML = "<strong>You have reached the final stage.</strong>" +
+        "Confirm with your clinician before a full return.";
+      btn.disabled = true;
+      btn.textContent = "Final stage reached";
+      note.textContent = "";
+      return;
+    }
+
+    var need = st.need;
+    var have = st.have;
+    var nextStage = P.STAGES[state.currentStage + 1];
+
+    if (st.allowed) {
+      statusEl.className = "status status-ok";
+      statusEl.innerHTML = "<strong>" + have + " symptom-free " + (have === 1 ? "day" : "days") +
+        " logged at this stage.</strong>" +
+        "That meets the " + need + "-day window. Confirm with your clinician before moving on.";
+      btn.disabled = false;
+      btn.textContent = "Move to: " + nextStage;
+      note.textContent = "";
+    } else if (justBlocked) {
+      statusEl.className = "status status-blocked";
+      statusEl.innerHTML = "<strong>Not yet — advancing is blocked.</strong>" +
+        "You need " + need + " symptom-free " + (need === 1 ? "day" : "days") +
+        " logged since your last change of stage, and you currently have " + have + ". " +
+        "A check-in with any symptom above 0 resets the count. This is the framework's own rule, " +
+        "and Pace will not let you click past it.";
+      btn.disabled = true;
+      btn.textContent = "Move to: " + nextStage;
+      note.textContent = "Log a fully symptom-free check-in below when you have one.";
+    } else {
+      statusEl.className = "status status-wait";
+      statusEl.innerHTML = "<strong>" + have + " of " + need + " symptom-free " +
+        (need === 1 ? "day" : "days") + " logged at this stage.</strong>" +
+        "The framework asks for " + (need === 1 ? "24 hours" : need + " days") +
+        " symptom-free before progressing.";
+      btn.disabled = true;
+      btn.textContent = "Move to: " + nextStage;
+      note.textContent = "Log a fully symptom-free check-in below to open the next stage.";
+    }
+  }
+
+  function renderLog() {
+    var el = document.getElementById("logHistory");
+
+    if (state.log.length === 0) {
+      el.innerHTML = '<p class="empty-state">No entries yet. Log your first check-in above.</p>';
+      return;
+    }
+
+    el.innerHTML = "";
+    state.log.slice().reverse().forEach(function (entry) {
+      var max = P.maxSymptom(entry);
+      var notable = max >= P.NOTABLE_THRESHOLD;
+      var clear = P.isSymptomFree(entry);
+
+      var div = document.createElement("div");
+      div.className = "log-entry" + (notable ? " flag" : clear ? " clear" : "");
+
+      var activity = document.createElement("div");
+      activity.className = "log-activity";
+      activity.textContent = entry.activity;
+
+      var meta = document.createElement("div");
+      meta.className = "log-meta";
+      var scores = P.SYMPTOMS.map(function (sym) {
+        return sym.label.toLowerCase() + " " + entry[sym.key];
+      }).join(", ");
+      meta.textContent = formatDate(entry.date) + " — " +
+        (clear ? "no symptoms reported" : scores);
+
+      div.appendChild(activity);
+      div.appendChild(meta);
+
+      if (notable) {
+        var flag = document.createElement("div");
+        flag.className = "log-meta log-flag-text";
+        flag.textContent = "Notable — consider raising this one with your clinician.";
+        div.appendChild(flag);
+      }
+
+      el.appendChild(div);
+    });
+  }
+
+  function render(justBlocked) {
+    renderStages();
+    renderGate(justBlocked);
+    renderLog();
+  }
+
+  // -------------------------------------------------------------------------
+  // Events
+  // -------------------------------------------------------------------------
+
+  document.getElementById("logBtn").addEventListener("click", function () {
+    var entry = readSymptomInputs();
+    var wasAllowed = P.advanceStatus(state).allowed;
+
+    P.logEntry(state, entry);
+    saveState();
+    clearSymptomInputs();
+    render(false);
+
+    var feedback = document.getElementById("logFeedback");
+    if (P.isSymptomFree(entry)) {
+      feedback.textContent = "Saved as a symptom-free check-in.";
+    } else if (wasAllowed) {
+      feedback.textContent = "Saved. Because this check-in had symptoms, the symptom-free " +
+        "count is back to zero and the next stage is closed again.";
+    } else {
+      feedback.textContent = "Saved. This check-in had symptoms, so the symptom-free count stays at zero.";
+    }
+  });
+
+  document.getElementById("advanceBtn").addEventListener("click", function () {
+    // The button is disabled whenever the gate is shut, so this is a second
+    // line of defence rather than the only one -- the logic refuses either way.
+    if (!P.tryAdvance(state, todayStr())) {
+      render(true);
+      return;
+    }
+    saveState();
+    render(false);
+    document.getElementById("logFeedback").textContent = "";
+  });
+
+  document.getElementById("windowSelect").addEventListener("change", function () {
+    if (P.setRequiredSymptomFreeDays(state, parseInt(this.value, 10))) {
+      saveState();
+      render(false);
+    }
+  });
+
+  document.getElementById("printBtn").addEventListener("click", function () {
+    window.print();
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    if (!window.confirm("Erase every check-in and reset to stage 1? This cannot be undone.")) return;
+    try { localStorage.removeItem(P.STORAGE_KEY); } catch (e) { /* nothing stored to remove */ }
+    state = P.initialState();
+    render(false);
+    document.getElementById("logFeedback").textContent = "All data erased from this device.";
+  });
+
+  // -------------------------------------------------------------------------
+  // Start
+  // -------------------------------------------------------------------------
+
+  buildSymptomInputs();
+  document.getElementById("windowSelect").value = String(state.requiredSymptomFreeDays);
+  render(false);
+
+  if (!storageWorks) {
+    var warn = document.createElement("div");
+    warn.className = "status status-wait";
+    warn.setAttribute("role", "note");
+    warn.innerHTML = "<strong>This browser is not letting Pace save anything.</strong>" +
+      "You can still use it, but your log will be gone when you close the tab. " +
+      "Private browsing mode is the usual cause.";
+    document.querySelector("main").insertBefore(warn, document.querySelector("main").firstChild);
+  }
+})();
+</script>
+</body>
+</html>

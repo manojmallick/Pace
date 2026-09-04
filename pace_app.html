@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pace — Concussion Recovery Companion</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, system-ui, sans-serif;
+    max-width: 640px; margin: 0 auto; padding: 20px;
+    background: #F7F9FC; color: #1A2233;
+  }
+  h1 { font-size: 1.5rem; color: #1D4E89; margin-bottom: 4px; }
+  .subtitle { color: #5A6B85; font-size: 0.9rem; margin-bottom: 20px; }
+
+  .safety-banner {
+    background: #FFF4E5; border: 1.5px solid #E8A33D; border-radius: 10px;
+    padding: 14px 16px; font-size: 0.85rem; color: #7A4A0A; margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .safety-banner strong { display: block; margin-bottom: 4px; }
+
+  .card {
+    background: white; border-radius: 12px; padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px;
+  }
+  .card h2 { font-size: 1.05rem; margin: 0 0 12px; color: #1D4E89; }
+
+  .stage-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .stage-badge {
+    width: 28px; height: 28px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 0.8rem;
+    font-weight: 600; flex-shrink: 0;
+  }
+  .stage-done { background: #2E9E5B; color: white; }
+  .stage-current { background: #1D4E89; color: white; }
+  .stage-locked { background: #E1E6ED; color: #8593A8; }
+  .stage-label { font-size: 0.9rem; }
+  .stage-locked-label { color: #A5B0C0; }
+
+  label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #33415C; }
+  select, input[type=range] { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #D3DAE6; margin-bottom: 14px; }
+
+  .symptom-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .symptom-row span:first-child { font-size: 0.85rem; }
+  .symptom-value { font-weight: 600; color: #1D4E89; width: 24px; text-align: right; }
+
+  button {
+    background: #1D4E89; color: white; border: none; padding: 12px 18px;
+    border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; width: 100%;
+  }
+  button:hover { background: #163B69; }
+  button.secondary { background: #E1E6ED; color: #33415C; margin-top: 8px; }
+  button.secondary:hover { background: #D3DAE6; }
+
+  .log-entry {
+    border-left: 3px solid #D3DAE6; padding: 8px 12px; margin-bottom: 8px; font-size: 0.85rem;
+  }
+  .log-entry.flag { border-left-color: #E8A33D; background: #FFF9F0; }
+  .log-meta { color: #8593A8; font-size: 0.75rem; }
+
+  .progress-msg {
+    padding: 12px 14px; border-radius: 10px; font-size: 0.88rem; margin-bottom: 16px;
+  }
+  .progress-ok { background: #E9F7EF; color: #1E6B3D; }
+  .progress-wait { background: #FEF3E2; color: #92600D; }
+
+  .empty-state { color: #8593A8; font-size: 0.85rem; font-style: italic; }
+  footer { font-size: 0.75rem; color: #8593A8; text-align: center; margin-top: 30px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<h1>Pace</h1>
+<div class="subtitle">A companion for the graduated return-to-activity plan your clinician gave you</div>
+
+<div class="safety-banner">
+  <strong>This tool does not diagnose concussions and does not decide when you're ready to progress stages.</strong>
+  It only helps you track the plan your own clinician already gave you, and log symptoms to discuss at your
+  next appointment. Always follow your clinician's guidance over anything shown here.
+</div>
+
+<div class="card">
+  <h2>Your graduated return-to-activity stages</h2>
+  <div id="stageList"></div>
+  <div id="progressMsg" class="progress-msg"></div>
+  <button id="advanceBtn">Log today's symptom-free check-in</button>
+  <div style="font-size:0.75rem; color:#8593A8; margin-top:8px;">
+    Based on the stepwise framework (symptom-limited activity → light aerobic
+    exercise → sport-specific exercise → non-contact training → full-contact
+    practice → return to sport), each requiring 24 hours symptom-free before
+    progressing, per the 6th International Conference on Concussion in Sport
+    consensus statement.
+  </div>
+</div>
+
+<div class="card">
+  <h2>Log symptoms after an activity attempt</h2>
+  <label for="activityInput">What did you just try?</label>
+  <select id="activityInput">
+    <option>Reading / screen time</option>
+    <option>Light walk</option>
+    <option>Schoolwork / desk work</option>
+    <option>Light aerobic exercise</option>
+    <option>Sport-specific drills (no contact)</option>
+    <option>Other</option>
+  </select>
+
+  <div class="symptom-row"><span>Headache</span><input type="range" min="0" max="10" value="0" id="headache" oninput="document.getElementById('headacheVal').textContent=this.value"><span class="symptom-value" id="headacheVal">0</span></div>
+  <div class="symptom-row"><span>Light sensitivity</span><input type="range" min="0" max="10" value="0" id="light" oninput="document.getElementById('lightVal').textContent=this.value"><span class="symptom-value" id="lightVal">0</span></div>
+  <div class="symptom-row"><span>Cognitive fog</span><input type="range" min="0" max="10" value="0" id="fog" oninput="document.getElementById('fogVal').textContent=this.value"><span class="symptom-value" id="fogVal">0</span></div>
+  <div class="symptom-row"><span>Dizziness</span><input type="range" min="0" max="10" value="0" id="dizzy" oninput="document.getElementById('dizzyVal').textContent=this.value"><span class="symptom-value" id="dizzyVal">0</span></div>
+
+  <button id="logBtn">Save this entry</button>
+</div>
+
+<div class="card">
+  <h2>Your log — bring patterns like these to your clinician</h2>
+  <div id="logHistory"><div class="empty-state">No entries yet. Log your first check-in above.</div></div>
+</div>
+
+<footer>
+  Prototype built for Hack for Humanity Summer 2026. Not a medical device.
+  Does not diagnose, treat, or replace professional care. If you're
+  experiencing worsening symptoms, seek medical attention.
+</footer>
+
+<script>
+const STAGES = [
+  "Symptom-limited activity",
+  "Light aerobic exercise",
+  "Sport-specific exercise",
+  "Non-contact training drills",
+  "Full-contact practice",
+  "Return to sport"
+];
+
+function loadState() {
+  const raw = localStorage.getItem("pace_state");
+  if (raw) return JSON.parse(raw);
+  return { currentStage: 0, lastAdvanceDate: null, symptomFreeStreakDays: 0, log: [] };
+}
+function saveState(state) {
+  localStorage.setItem("pace_state", JSON.stringify(state));
+}
+
+let state = loadState();
+
+function todayStr() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function daysSince(dateStr) {
+  if (!dateStr) return Infinity;
+  const then = new Date(dateStr);
+  const now = new Date(todayStr());
+  return Math.round((now - then) / 86400000);
+}
+
+function renderStages() {
+  const el = document.getElementById("stageList");
+  el.innerHTML = "";
+  STAGES.forEach((label, i) => {
+    const row = document.createElement("div");
+    row.className = "stage-row";
+    const badge = document.createElement("div");
+    badge.className = "stage-badge " + (i < state.currentStage ? "stage-done" : i === state.currentStage ? "stage-current" : "stage-locked");
+    badge.textContent = i < state.currentStage ? "✓" : (i + 1);
+    const text = document.createElement("div");
+    text.className = "stage-label" + (i > state.currentStage ? " stage-locked-label" : "");
+    text.textContent = label;
+    row.appendChild(badge);
+    row.appendChild(text);
+    el.appendChild(row);
+  });
+
+  const progressEl = document.getElementById("progressMsg");
+  if (state.currentStage >= STAGES.length - 1) {
+    progressEl.className = "progress-msg progress-ok";
+    progressEl.textContent = "You've reached the final stage. Confirm with your clinician before full return.";
+  } else if (state.symptomFreeStreakDays >= 1) {
+    progressEl.className = "progress-msg progress-ok";
+    progressEl.textContent = `${state.symptomFreeStreakDays} day(s) symptom-free at this stage. 24 continuous hours symptom-free is generally required before progressing — always confirm with your clinician.`;
+  } else {
+    progressEl.className = "progress-msg progress-wait";
+    progressEl.textContent = "No symptom-free check-in logged yet at this stage.";
+  }
+}
+
+function renderLog() {
+  const el = document.getElementById("logHistory");
+  if (state.log.length === 0) {
+    el.innerHTML = '<div class="empty-state">No entries yet. Log your first check-in above.</div>';
+    return;
+  }
+  el.innerHTML = "";
+  [...state.log].reverse().forEach(entry => {
+    const div = document.createElement("div");
+    const maxSymptom = Math.max(entry.headache, entry.light, entry.fog, entry.dizzy);
+    div.className = "log-entry" + (maxSymptom >= 6 ? " flag" : "");
+    div.innerHTML = `<div>${entry.activity}</div>
+      <div class="log-meta">${entry.date} — headache ${entry.headache}, light ${entry.light}, fog ${entry.fog}, dizziness ${entry.dizzy}${maxSymptom >= 6 ? " — notable, consider flagging to your clinician" : ""}</div>`;
+    el.appendChild(div);
+  });
+}
+
+document.getElementById("logBtn").addEventListener("click", () => {
+  const entry = {
+    date: todayStr(),
+    activity: document.getElementById("activityInput").value,
+    headache: parseInt(document.getElementById("headache").value),
+    light: parseInt(document.getElementById("light").value),
+    fog: parseInt(document.getElementById("fog").value),
+    dizzy: parseInt(document.getElementById("dizzy").value),
+  };
+  state.log.push(entry);
+
+  const allZero = entry.headache === 0 && entry.light === 0 && entry.fog === 0 && entry.dizzy === 0;
+  if (allZero) {
+    if (state.lastAdvanceDate !== todayStr()) {
+      state.symptomFreeStreakDays += 1;
+      state.lastAdvanceDate = todayStr();
+    }
+  } else {
+    state.symptomFreeStreakDays = 0;
+  }
+
+  saveState(state);
+  renderStages();
+  renderLog();
+  ["headache","light","fog","dizzy"].forEach(id => {
+    document.getElementById(id).value = 0;
+    document.getElementById(id+"Val").textContent = "0";
+  });
+});
+
+document.getElementById("advanceBtn").addEventListener("click", () => {
+  if (state.symptomFreeStreakDays < 1) {
+    alert("Log at least one symptom-free check-in before advancing — per the 24-hour rule, and always confirm with your clinician before progressing stages.");
+    return;
+  }
+  if (state.currentStage < STAGES.length - 1) {
+    state.currentStage += 1;
+    state.symptomFreeStreakDays = 0;
+    saveState(state);
+    renderStages();
+  }
+});
+
+renderStages();
+renderLog();
+</script>
+</body>
+</html>

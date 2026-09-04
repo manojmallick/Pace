@@ -171,43 +171,63 @@ safety-critical logic lives in `src/js/pace-logic.js`, which
 under test is the code that ships. Core logic, extracted and verified:
 
 ```javascript
-const STAGES = [
+var STAGES = [
   "Symptom-limited activity", "Light aerobic exercise", "Sport-specific exercise",
   "Non-contact training drills", "Full-contact practice", "Return to sport"
 ];
 
-function loadState() {
-  const raw = localStorage.getItem("pace_state");
-  if (raw) return JSON.parse(raw);
-  return { currentStage: 0, lastAdvanceDate: null, symptomFreeStreakDays: 0, log: [] };
+/*
+ * Whether a symptom-free check-in on this date may increment the count.
+ * ISO yyyy-mm-dd dates compare correctly as strings, so "<=" means "on or
+ * before". Backdated entries are covered by the same test.
+ */
+function countsTowardGate(state, date) {
+  if (state.lastAdvanceDate && date <= state.lastAdvanceDate) return false;
+  return state.lastSymptomFreeDate !== date;
 }
-function saveState(state) { localStorage.setItem("pace_state", JSON.stringify(state)); }
 
-function logEntry(state, entry, today) {
+function logEntry(state, entry) {
   state.log.push(entry);
-  const allZero = entry.headache === 0 && entry.light === 0 && entry.fog === 0 && entry.dizzy === 0;
-  if (allZero) {
-    if (state.lastAdvanceDate !== today) {
-      state.symptomFreeStreakDays += 1;
-      state.lastAdvanceDate = today;
+  if (isSymptomFree(entry)) {
+    if (countsTowardGate(state, entry.date)) {
+      state.symptomFreeDays += 1;
+      state.lastSymptomFreeDate = entry.date;
     }
   } else {
-    state.symptomFreeStreakDays = 0;   // the Stage Gate's core rule
+    state.symptomFreeDays = 0;          // the Stage Gate's core rule
+    state.lastSymptomFreeDate = null;
   }
-  saveState(state);
+  return state;
 }
 
-function tryAdvance(state) {
-  if (state.symptomFreeStreakDays < 1) return false;   // structurally blocked
-  if (state.currentStage < STAGES.length - 1) {
-    state.currentStage += 1;
-    state.symptomFreeStreakDays = 0;
-    saveState(state);
-    return true;
+function advanceStatus(state) {
+  if (state.currentStage >= STAGES.length - 1) {
+    return { allowed: false, reason: "final-stage" };
   }
-  return false;
+  var need = requiredDays(state);       // never less than the framework minimum
+  if (state.symptomFreeDays < need) {
+    return { allowed: false, reason: "insufficient-symptom-free-days",
+             have: state.symptomFreeDays, need: need };
+  }
+  return { allowed: true, reason: "gate-met", have: state.symptomFreeDays, need: need };
+}
+
+function tryAdvance(state, today) {
+  if (!advanceStatus(state).allowed) return false;   // structurally blocked
+  state.currentStage += 1;
+  state.symptomFreeDays = 0;
+  state.lastSymptomFreeDate = null;
+  state.lastAdvanceDate = today || null;
+  return true;
 }
 ```
+
+Note the two separate date fields. An earlier draft of this section
+tracked only one, and that version is the bug described in Challenge 3:
+advancing cleared the date, so the same calendar day could be logged
+symptom-free again and immediately spend a second advance. A
+symptom-free day now counts only if it falls strictly after the last
+advance.
 
 The full file also includes: the non-dismissible safety banner (top of
 page, not a footer), the 4-symptom logging UI with live sliders, a

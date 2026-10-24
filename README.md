@@ -26,6 +26,10 @@ open index.html          # or just double-click it
 npm test                 # 27 logic assertions
 ```
 
+## Run it
+
+`npm start` opens `index.html` in your default browser (it uses `open`, `start` or `xdg-open` for your OS). Pace is a static page, so you can also open the file yourself or serve the folder with any static server.
+
 ## What it does
 
 - Tracks progress through the **six-stage** graduated return-to-sport framework.
